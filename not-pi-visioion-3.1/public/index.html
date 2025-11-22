@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Not Pi Vision 3.1 - AI Learning Studio</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./styles/style.css">
+    <link rel="icon" href="https://res.cloudinary.com/dmttn34te/image/upload/v1744583444/Screenshot_2025-04-14_040029_ybfrtb.png" type="image/gif">
+</head>
+
+<body>
+    <div class="toast-container" id="toastContainer"></div>
+
+    <div class="page-content">
+        <div id="dashboardScreen" class="screen active">
+            <div class="dashboard-hero">
+                <div class="hero-panel">
+                    <h1 class="hero-title">Not Pi Vision 3.1</h1>
+                    <div class="hero-subtitle" style="font-style: italic">AI and Frontend Powered Learning<br>
+                        <p class="text-secondary mt-4">Developed by <strong>S. A. M.</strong></p>
+                    </div>
+                </div>
+            </div>
+            <h2 style="text-align: center; color: var(--text-primary); font-weight: 700; margin: 2rem 0; font-size: 1.5rem;">Your Workspaces</h2>
+            <div class="workspace-grid" id="workspaceGrid"></div>
+        </div>
+
+        <div id="workspaceScreen" class="screen">
+            <div class="mobile-header">
+                <button id="sidebar-toggle-btn" class="mobile-header-btn"><i class="bi bi-list"></i></button>
+                <h5 class="mobile-workspace-title" id="mobileWorkspaceTitle">Workspace</h5>
+                <div>
+                    <button onclick="goBackToDashboard()" class="mobile-header-btn me-2"><i class="bi bi-arrow-left"></i></button>
+                    <button id="open-notes-modal-btn" class="mobile-header-btn"><i class="bi bi-pencil-square"></i></button>
+                </div>
+            </div>
+            <div class="sidebar-overlay" onclick="toggleMobileSidebar()"></div>
+
+            <div class="workspace-container">
+                <button class="back-to-dashboard-btn" onclick="goBackToDashboard()">
+                    <i class="bi bi-arrow-left"></i> Dashboard
+                </button>
+
+                <div class="sidebar-panel" id="sidebar-panel">
+                    <div class="sidebar-header">
+                        <h5 class="sidebar-title"><i class="bi bi-list-nested"></i> Topics</h5>
+                        <div class="sidebar-actions">
+                            <button class="filter-btn" id="filterBtn" onclick="toggleFilterGenerated()" title="Show only generated topics">
+                                <i class="bi bi-funnel"></i>
+                            </button>
+                            <button class="add-topic-btn" onclick="showAddTopicModal()" title="Add new topic">
+                                <i class="bi bi-plus-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="topics-tree" id="topicsSidebar"></div>
+                </div>
+
+                <div class="content-main">
+                    <div class="content-viewer-panel">
+                        <div class="tab-label" id="vizLabel"></div>
+                        <div class="content-tabs">
+                            <button class="content-tab active" onclick="switchContentTab(event, 'visualization')">
+                                <i class="bi bi-diagram-3"></i> Visualization
+                            </button>
+                            <button class="content-tab" onclick="switchContentTab(event, 'pages')">
+                                <i class="bi bi-file-earmark-text"></i> Pages
+                            </button>
+                            <button class="content-tab" id="quizTab" onclick="switchContentTab(event, 'quiz')" style="display:none;">
+                                <i class="bi bi-question-circle"></i> Quiz
+                            </button>
+                        </div>
+
+                        <div id="visualization" class="content-display active">
+                            <div class="visualization-container" id="vizContainer">
+                                <div class="placeholder-wrapper">
+                                    <div class="pulse-icon"><i class="bi bi-book-open-check"></i></div>
+                                    <h5 class="placeholder-title">Select a topic to begin</h5>
+                                    <p class="placeholder-hint">Click a topic or <i class="bi bi-magic"></i> icon to start.</p>
+                                </div>
+                            </div>
+                            <button class="viz-fullscreen-btn" onclick="toggleVisualizationFullscreen()" title="Fullscreen">
+                                <i class="bi bi-arrows-fullscreen"></i>
+                            </button>
+                        </div>
+
+                        <div id="pages" class="content-display">
+                            <div id="pagesContent" class="pages-content-wrapper"></div>
+                        </div>
+
+                        <div id="quiz" class="content-display">
+                            <div id="quizContent" class="quiz-content-wrapper"></div>
+                        </div>
+                    </div>
+
+                    <button class="notes-toggle-btn" onclick="toggleNotesSidebar()">
+                        <i class="bi bi-chevron-right"></i>
+                    </button>
+                    <div class="notes-sidebar collapsed" id="notesSidebar">
+                        <div class="notes-header">
+                            <h5 class="notes-title"><i class="bi bi-pencil-square"></i> Notes</h5>
+                        </div>
+                        <div class="notes-container collapsed" id="notesContainer">
+                            <div id="notepadHost"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="showAITutorModal()" style="position: fixed; bottom: 2rem; right: 2rem; width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #22C55E 0%, #4ADE80 100%); border: none; color: white; font-size: 1.5rem; box-shadow: 0 8px 20px rgba(34, 197, 94, 0.3); cursor: pointer; z-index: 999; transition: all 0.3s ease;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                <i class="bi bi-chat-dots"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- NOTEPAD MODAL (small screens) -->
+    <div class="modal fade" id="notepadModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content tutor-modal">
+                <div class="modal-header tutor-header border-0">
+                    <h5 class="modal-title tutor-title"><i class="bi bi-pencil-square"></i> Notes</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="notepadModalBody"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CREATE WORKSPACE MODAL -->
+    <div class="modal fade" id="newWorkspaceModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content tutor-modal">
+                <div class="modal-header tutor-header border-0">
+                    <h5 class="modal-title tutor-title">Create New Workspace</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Workspace Title</label>
+                        <input type="text" class="form-control" id="workspaceTitle" placeholder="e.g., Biology: Cell Biology" />
+                    </div>
+                    <ul class="nav nav-tabs" role="tablist" style="border-bottom: 1px solid rgba(34, 197, 94, 0.15); margin-bottom: 1rem;">
+                        <li class="nav-item">
+                            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#blankContent">Blank</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#aiContent">AI Generate</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#uploadContent">Upload</button>
+                        </li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane fade show active" id="blankContent">
+                            <p style="color: var(--text-secondary);">Create an empty workspace and build manually.</p>
+                        </div>
+                        <div class="tab-pane fade" id="aiContent">
+                            <div class="mb-3">
+                                <label class="form-label">Syllabus or Description</label>
+                                <textarea class="form-control" id="syllabusInput" placeholder="Write something about your need or paste syllabus...
+Don't keep it blank." rows="4"></textarea>
+                            </div>
+                            <div class="mb-3 language-box">
+                                <label class="form-label">🌐 Language</label>
+                                <select id="languageSelect" class="language-select">
+                                    <option>English</option>
+                                    <option>Hindi</option>
+                                    <option>Bengali</option>
+                                    <option>Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="uploadContent">
+                            <div class="mb-3">
+                                <label class="form-label">Upload Workspace (.json or .zip)</label>
+                                <input type="file" class="form-control" id="workspaceUploadInput" accept=".json,.zip" />
+                            </div>
+                            <p class="text-secondary">Upload a workspace export JSON or a ZIP containing the JSON.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary-npv" id="createWorkspaceBtn" onclick="createWorkspace()">Create</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADD/IMPORT TOPIC MODAL -->
+    <div class="modal fade" id="addTopicModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content tutor-modal">
+                <div class="modal-header tutor-header border-0">
+                    <h5 class="modal-title tutor-title">Add New Topic</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <ul class="nav nav-tabs mb-3">
+                        <li class="nav-item">
+                            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#manualTopicTab">Manual</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#importTopicTab">Import File</button>
+                        </li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane fade show active" id="manualTopicTab">
+                            <div class="mb-3">
+                                <label class="form-label">Topic Title</label>
+                                <input type="text" class="form-control" id="newTopicTitle" placeholder="Enter topic name" />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Unit</label>
+                                <select class="form-select" id="topicUnitSelect"></select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Chapter</label>
+                                <select class="form-select" id="topicChapterSelect"></select>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="importTopicTab">
+                            <div class="mb-3">
+                                <label class="form-label">Upload File (.txt)</label>
+                                <input type="file" class="form-control" id="moduleFileUpload" accept=".txt" multiple />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Target Unit</label>
+                                <select class="form-select" id="importUnitSelect"></select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Target Chapter</label>
+                                <select class="form-select" id="importChapterSelect"></select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary-npv" onclick="addNewTopic()">Add Topic</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GENERATE CONTENT MODAL -->
+    <div class="modal fade" id="generateModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content tutor-modal">
+                <div class="modal-header tutor-header border-0">
+                    <h5 class="modal-title tutor-title">Generate Content for <span id="topicNameDisplay"></span></h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body custom-scrollbar" style="max-height: 70vh; overflow-y: auto;">
+                    <div class="section-wrapper">
+                        <div class="section-title">Step 1: AI Engine</div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="ai-engine-card selectable selected" data-engine="gemini" onclick="selectAIEngine('gemini')">
+                                    <div class="card-icon"><i class="bi bi-stars"></i></div>
+                                    <div class="fw-bold fs-5">Gemini</div>
+                                    <div class="small" style="color: var(--text-secondary);">Automatic</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="ai-engine-card selectable" data-engine="chatgpt" onclick="selectAIEngine('chatgpt')">
+                                    <div class="card-icon"><i class="bi bi-robot"></i></div>
+                                    <div class="fw-bold fs-5">ChatGPT</div>
+                                    <div class="small" style="color: var(--text-secondary);">Manual</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-wrapper">
+                        <div class="section-title">Step 2: Template</div>
+                        <div class="row row-cols-2 row-cols-md-3 g-3">
+                            <div class="col">
+                                <div class="template-card selectable selected" data-template="surprise-me" onclick="selectTemplate('surprise-me')">
+                                    <div class="card-icon"><i class="bi bi-lightbulb"></i></div>
+                                    <div class="fw-bold">Surprise Me!</div>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="template-card selectable" data-template="presentation" onclick="selectTemplate('presentation')">
+                                    <div class="card-icon"><i class="bi bi-easel"></i></div>
+                                    <div class="fw-bold">Presentation</div>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="template-card selectable" data-template="mindvoice" onclick="selectTemplate('mindvoice')">
+                                    <div class="card-icon"><i class="bi bi-diagram-3"></i></div>
+                                    <div class="fw-bold">Mindmap</div>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="template-card selectable" data-template="graph" onclick="selectTemplate('graph')">
+                                    <div class="card-icon"><i class="bi bi-bar-chart"></i></div>
+                                    <div class="fw-bold">Graph</div>
+                                </div>
+                            </div>
+                            <div class="col">
+                                
+                            </div>
+                            <div class="col">
+                                <div class="template-card selectable" data-template="chemistry" onclick="selectTemplate('chemistry')">
+                                    <div class="card-icon"><i class="bi bi-mortarboard"></i></div>
+                                    <div class="fw-bold">Chemistry</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-wrapper" id="visTypeSection" style="display:block;">
+                        <div class="section-title">Step 3: Visualization Type <small>(Surprise Me! only)</small></div>
+                        <div class="row row-cols-2 row-cols-md-3 g-3">
+                            <div class="col">
+                                <div class="template-card selectable selected" data-vistype="2d-animation" onclick="selectVisType('2d-animation')">
+                                    <div class="card-icon"><i class="bi bi-play-btn"></i></div>
+                                    <div class="fw-bold">2D Animation</div>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="template-card selectable" data-vistype="2d-interactive" onclick="selectVisType('2d-interactive')">
+                                    <div class="card-icon"><i class="bi bi-hand-index"></i></div>
+                                    <div class="fw-bold">2D Interactive</div>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="template-card selectable" data-vistype="2d-cartoon" onclick="selectVisType('2d-cartoon')">
+                                    <div class="card-icon"><i class="bi bi-emoji-smile"></i></div>
+                                    <div class="fw-bold">2D Cartoon</div>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="template-card selectable" data-vistype="2d-blueprint" onclick="selectVisType('2d-blueprint')">
+                                    <div class="card-icon"><i class="bi bi-rulers"></i></div>
+                                    <div class="fw-bold">2D Blueprint</div>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="template-card selectable" data-vistype="3d-animation" onclick="selectVisType('3d-animation')">
+                                    <div class="card-icon"><i class="bi bi-box"></i></div>
+                                    <div class="fw-bold">3D Animation</div>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="template-card selectable" data-vistype="3d-interactive" onclick="selectVisType('3d-interactive')">
+                                    <div class="card-icon"><i class="bi bi-globe"></i></div>
+                                    <div class="fw-bold">3D Interactive</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-wrapper">
+                        <div class="section-title">Step 4: Complexity</div>
+                        <input type="range" id="complexitySlider" class="form-range mb-3" min="1" max="4" value="2">
+                        <div class="d-flex justify-content-between small" style="color: var(--text-secondary);">
+                            <span>Basic</span>
+                            <span>Intermediate</span>
+                            <span>Advanced</span>
+                            <span>Expert</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <button id="advancedToggle" class="premium-btn w-100" onclick="toggleAdvanced()">
+                            <span>Advanced Options</span>
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div id="advancedContainer" style="max-height: 0; overflow: hidden; transition: max-height 0.4s;">
+                            <div class="section-wrapper mt-3">
+                                <div class="mb-3">
+                                    <label class="form-label">Custom Context</label>
+                                    <textarea id="customContext" class="form-control" rows="4" placeholder="Add specific requirements..."></textarea>
+                                </div>
+                                <button class="premium-btn w-100 mb-3" id="autoContextBtn" onclick="autoContext()">
+                                    <i class="bi bi-magic"></i>
+                                    <span>Auto Generate 5-Line Context</span>
+                                </button>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Content Language</label>
+                                        <input type="text" id="contentLang" class="form-control" value="English">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Narration Language</label>
+                                        <input type="text" id="narrationLang" class="form-control" value="en-IN">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="premium-btn-gold" id="generateBtn" onclick="generateContent()">
+                        <i class="bi bi-stars"></i> <span id="genBtnText">Generate</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI RESPONSE MODAL -->
+    <div class="modal fade" id="responseModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content tutor-modal">
+                <div class="modal-header tutor-header border-0">
+                    <h5 class="modal-title tutor-title">AI Response</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <p class="text-muted small mb-0" style="border:2px solid #c1de09; border-radius:6px; padding:5px;background:#1a1a2e;">
+                            Review, edit, or paste content before saving.
+                        </p>
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="pasteResponse()">
+                                <i class="bi bi-clipboard"></i> Paste
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="copyResponse()">
+                                <i class="bi bi-copy"></i> Copy
+                            </button>
+                        </div>
+                    </div>
+                    <textarea class="form-control mb-3" id="aiResponse" rows="10" placeholder="AI response will appear here or paste manually..."></textarea>
+                    <div class="console-output" id="console">Console: Ready</div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" onclick="retryContent()">
+                        <i class="bi bi-arrow-clockwise"></i> Retry
+                    </button>
+                    <button type="button" class="btn btn-warning" onclick="showFixModal()">
+                        <i class="bi bi-wrench"></i> Fix
+                    </button>
+                    <button type="button" class="btn btn-info" onclick="previewContent()" id="previewBtn">
+                        <i class="bi bi-eye"></i> Preview
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="saveContent()" id="saveBtn">
+                        <i class="bi bi-save"></i> Save
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PREVIEW MODAL -->
+    <div class="modal fade" id="previewModal" tabindex="-1">
+        <div class="modal-dialog modal-fullscreen">
+            <div class="modal-content tutor-modal" style="border-radius:0;">
+                <div class="modal-header tutor-header">
+                    <h5 class="modal-title tutor-title">Content Preview</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div class="content-tabs">
+                        <button class="content-tab active" onclick="switchPreviewTab(event, 'previewViz')">
+                            <i class="bi bi-diagram-3"></i> Visualization
+                        </button>
+                        <button class="content-tab" onclick="switchPreviewTab(event, 'previewPages')">
+                            <i class="bi bi-file-earmark-text"></i> Pages
+                        </button>
+                    </div>
+                    <div id="previewViz" class="content-display active" style="height: calc(100vh - 120px);"></div>
+                    <div id="previewPages" class="content-display" style="height: calc(100vh - 120px); overflow-y: auto; padding: 2rem;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FIX REQUEST MODAL -->
+    <div class="modal fade" id="fixModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content tutor-modal">
+                <div class="modal-header tutor-header border-0">
+                    <h5 class="modal-title tutor-title">Request a Fix</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <label class="form-label">Describe the issue:</label>
+                    <textarea class="form-control" id="fixInput" rows="4" placeholder="e.g., 'The animation is too fast' or 'Fix typo in slide 3'"></textarea>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary-npv" onclick="submitFix()">Submit Fix</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RENAME MODAL -->
+    <div class="modal fade" id="renameModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content tutor-modal">
+                <div class="modal-header tutor-header border-0">
+                    <h5 class="modal-title tutor-title">Rename Topic</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <label class="form-label">New Name</label>
+                    <input type="text" class="form-control" id="renameInput" />
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary-npv" onclick="saveRename()">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONFIRM MODAL -->
+    <div class="modal fade" id="confirmModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content tutor-modal">
+                <div class="modal-header tutor-header border-0">
+                    <h5 class="modal-title tutor-title" id="confirmTitle">Confirm</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="confirmMessage">Are you sure?</p>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmBtn">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI TUTOR MODAL -->
+    <div class="modal fade" id="aiTutorModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content tutor-modal">
+                <div class="modal-header tutor-header border-0">
+                    <h5 class="modal-title tutor-title"><i class="bi bi-robot"></i> AI Tutor</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="chat-container" id="chatMessages"></div>
+                <div class="tutor-input-area">
+                    <textarea id="tutorInput" placeholder="Ask anything..."></textarea>
+                    <button class="send-btn" onclick="sendMessage()"><i class="bi bi-send-fill"></i></button>
+                    <button class="send-btn" id="tutorCallStartBtn" style="background:#22C55E;color:#fff" title="Start Live Call">📞</button>
+                    <button class="send-btn" id="tutorCallEndBtn" style="background:#EF4444;color:#fff" title="End Live Call">⛔</button>
+                    <button class="send-btn" id="tutorSendContextBtn" title="Send Context">🧠</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="./scripts/tools.js"></script>
+<script src="./scripts/visual.js"></script>
+<script src="./scripts/pages.js"></script>
+<script src="./scripts/prompt.js"></script>
+<script src="./scripts/api.js"></script>
+<script src="./scripts/main.js"></script>
+
+</body>
+
+</html>
